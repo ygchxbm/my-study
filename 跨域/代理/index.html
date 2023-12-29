@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        h2 {
+            text-align: center;
+        }
+
+        .app {
+            width: 300px;
+            height: 200px;
+            border: 1px solid red;
+
+            :is(button) {
+                width: 80px;
+                height: 50px;
+                background: lightblue;
+                border: 0;
+                border-radius: 5px;
+                margin: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+<h2>首页</h2>
+<div class="app">
+    <button>click me</button>
+    <span>12321321321</span>
+</div>
+
+<script>
+    const btn = document.querySelector('button')
+    btn.addEventListener('click', () => {
+        // fetch('http://127.0.0.1:3009/getText', {同源策略，不能请求
+        fetch('./getText', {
+            method: 'POST'
+        }).then(res => {
+            return res.text()
+        }).then(data => {
+            document.querySelector("span").innerHTML=data
+            return data
+        })
+    })
+</script>
+</body>
+</html>
