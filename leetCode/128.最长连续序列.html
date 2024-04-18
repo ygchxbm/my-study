@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script>
+    /**
+     * @param {number[]} nums
+     * @return {number}
+     */
+    var longestConsecutive = function (nums) {
+        let nums_set = new Set([...nums]);
+        let longestStreak = 0;
+
+        for (const num of nums_set) {
+            if (!nums_set.has(num - 1)) {
+                let currentNum = num;
+                let currentStreak = 1;
+
+                while (nums_set.has(currentNum + 1)) {
+                    currentStreak += 1;
+                    currentNum += 1;
+                }
+                longestStreak = Math.max(longestStreak, currentStreak);
+            }
+        }
+        return longestStreak;
+
+    }([9, 1, 4, 7, 3, -1, 0, 5, 8, -1, 6]);
+</script>
+</body>
+</html>

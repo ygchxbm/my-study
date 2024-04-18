@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script>
+    /**
+     * @param {string[]} strs
+     * @return {string[][]}
+     */
+    var groupAnagrams = function (strs) {
+        //哈希表+元素排序
+        // const map = new Map();
+        // for (let i = 0; i < strs.length; i++) {
+        //     const key = strs[i].split('').sort().join('')
+        //     map.has(key) ? map.get(key).push(strs[i]) : map.set(key, [strs[i]]);
+        // }
+        //
+        // return [...map.values()];
+
+
+        //哈希表+元素每个字母的ASCII码值取质数来求乘积，来源于乘法的交换律
+        // const primeNums = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101];
+        // const strMap = new Map();
+        // for (let i = 0; i < strs.length; i++) {
+        //     let val = 1;
+        //     for (let j = 0; j < strs[i].length; j++) {
+        //         val *= primeNums[strs[i].charCodeAt(j) - 97]
+        //     }
+        //
+        //     strMap.has(val) ? strMap.get(val).push(i) : strMap.set(val, [i]);
+        // }
+        //
+        // return [...strMap.values()]
+    }(["eat", "tea", "tan", "ate", "nat", "bat"]);
+</script>
+</body>
+</html>

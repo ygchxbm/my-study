@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<script>
+    var twoSum = function (nums, target) {
+
+        ////// 双指针
+        // const res = [];
+        // let left = 0, right = nums.length - 1;
+        // const originNums = [].concat(nums);
+        // nums = nums.sort((a, b) => {
+        //     return a - b
+        // })
+        // while (left < right) {
+        //     const sum = nums[left] + nums[right];
+        //     if (sum > target) {
+        //         right--
+        //     } else if (sum < target) {
+        //         left++
+        //     } else {
+        //         debugger
+        //         const l = originNums.indexOf(nums[left]);
+        //         let r=originNums.indexOf(nums[right]);
+        //         while (l===r){
+        //             r=originNums.indexOf(nums[right],l+1);
+        //         }
+        //         res.push(l, r)
+        //         break
+        //     }
+        // }
+        // console.info("res:", res)
+        // return res;
+
+
+        //////哈希表
+        // const res = [];
+        // const map = new Map();
+        // for (let i = 0; i < nums.length; i++) {
+        //     if (map.has(target - nums[i])){
+        //         res.push(i, map.get(target - nums[i]))
+        //         break
+        //     }else{
+        //         map.set(nums[i], i)
+        //     }
+        // }
+        // return res;
+
+
+        //双指针该题中的应用前提是排序，排序后即可得到指针移动的条件，从而求出指针对应的值，但是元素的序列号是排序后的值，若需要之前的值则需要去源数组中寻找。所以当是求数组的序列号则双指针的优先级靠后，求值则可以考虑；
+
+        //哈希表则是空间换时间，在不改变数组元素的位置情况下可代替双重循环
+
+    }([2, 7, 11, 15], 9);
+</script>
+</body>
+</html>

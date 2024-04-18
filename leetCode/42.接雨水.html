@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script>
+    var trap = function (height) {
+        let res = 0;
+        const len = height.length;
+        if (len === 3) {
+            const r = Math.min(height[0], height[2]) - height[1];
+            res = r > 0 ? r : 0;
+        } else {
+            for (let i = 0; i < len - 1; i++) {
+                if (i === 0) continue;
+                if (i === len - 1) break;
+
+                let l = i - 1;
+                let r = i + 1;
+                let lMax = 0, rMax = 0;
+                while (l >= 0 || r <= len - 1) {
+                    if (l >= 0) {
+                        lMax = Math.max(lMax, height[l]);
+                    }
+                    if (r <= len - 1) {
+                        rMax = Math.max(rMax, height[r]);
+                    }
+                    l--;
+                    r++;
+                }
+                const rr = Math.min(lMax, rMax) - height[i];
+                res += rr > 0 ? rr : 0;
+            }
+        }
+        console.info("res:", res)
+        return res
+    }([4, 2, 0, 3, 2, 5]);
+</script>
+</body>
+</html>

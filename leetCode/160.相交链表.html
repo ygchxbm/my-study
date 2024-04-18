@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script>
+    var getIntersectionNode = function (headA, headB) {
+        let res = null;
+        const lA = headA.length;
+        const lB = headB.length;
+        const length = lA < lB ? lA : lB;
+
+        for (let i = 0; i < length; i++) {
+            if (headA[lA - i - 1] !== headB[lB - i - 1]) {
+                break
+            } else {
+                res = headA[lA - i - 1]
+            }
+        }
+        console.info("res:", res)
+        return 'Intersected at'+ res.toString();
+    }([4, 1, 8, 4, 5], [5, 6, 1, 8, 4, 5]);
+</script>
+</body>
+</html>

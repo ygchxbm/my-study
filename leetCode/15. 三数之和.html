@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script>
+    // 输入：nums = [-1,0,1,2,-1,-4]
+    // 输出：[[-1,-1,2],[-1,0,1]]
+    var threeSum = function (nums) {
+        // const map3=new Map()
+        nums.sort((a, b) => {
+            return a - b
+        });
+        // const newNums=[]
+        // for (let i = 0; i < nums.length; i++) {
+        //     if(!map3.get(nums[i])){
+        //         map3.set(nums[i],1)
+        //         newNums.push(nums[i])
+        //     }else if(map3.get(nums[i])<3){
+        //         map3.set(nums[i],map3.get(nums[i])+1)
+        //         newNums.push(nums[i])
+        //     }
+        // }
+        // console.info("map3:", map3)
+        //
+        // const res = [];
+        // for (let i = 0; i <newNums.length ; i++) {
+        //     const target = -newNums[i];
+        //     const map = new Map();
+        //     for (let j = i + 1; j < newNums.length; j++) {
+        //         if (!map.get(target - newNums[j])) {
+        //             map.set(newNums[j], j)
+        //         } else {
+        //             res.push([newNums[i], newNums[j], newNums[map.get(target - newNums[j])]])
+        //         }
+        //     }
+        // }
+        //
+        // console.info("res:", res)
+        // const map2 = new Map();
+        // for (const re of res) {
+        //     const val = re.sort().join('-')
+        //     if (!map2.get(val)) {
+        //         map2.set(val, re)
+        //     }
+        // }
+        // console.info("map2:", [...map2.values()])
+        // return [...map2.values()]
+
+
+        const res = []
+        for (let i = 0; i < nums.length; i++) {
+            if (nums[i - 1] && nums[i - 1] === nums[i]) {
+                continue
+            }
+            if (nums[i] >= 0) break
+            let left = i + 1, right = nums.length - 1;
+
+            while (left < right) {
+                if (nums[left] + nums[right] + nums[i] === 0) {
+                    res.push([nums[left], nums[right], nums[i]]);
+                    while (left < right && nums[left] === nums[left + 1]) {
+                        left++
+                    }
+                    while (left < right && nums[right] === nums[right - 1]) {
+                        right--
+                    }
+                    left++
+                    right--
+                } else if (nums[left] + nums[right] + nums[i] < 0) {
+                    left++
+                } else {
+                    right--
+                }
+            }
+        }
+
+        console.info("res:", res)
+        return res
+
+
+    }([-1,0,1,2,-1,-4]);
+
+</script>
+</body>
+</html>
