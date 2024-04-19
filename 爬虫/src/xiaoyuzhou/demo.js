@@ -1,0 +1,7 @@
+const api = require('./index')
+// console.log(api)
+// api.getPodcast("61791d921989541784257779")
+api.podcastWeb("61791d921989541784257779")
+// api.getEpisode("660fd1834f66d1c1da2a7e89")
+// api.getEpisode("656ee209b4b5dd5510b92339")
+// api.searchCreate("世界是个草台班子")

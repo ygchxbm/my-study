@@ -1,45 +1,41 @@
 //播客
-const axios = require("axios");
-const jsonData=require("./evn.json");
-const bastUrl="https://www.xiaoyuzhoufm.com"
-
+const baseRequest = require("./baseRequest");
 
 const podcastId = "652c966636a1383a6662920a"
 
 
-const headers = {
-    applicationid: 'app.podcast.cosmos',
-    'app-version': '1.6.0',
-    'x-jike-device-id': 'f5d56d9a-8530-49a4-a6d2-cfb4b7a31240',
-    'user-agent': 'okhttp/4.7.2',
-    'x-jike-access-token': jsonData['x-jike-access-token']
-};
-
-
 //获取播客信息
-function getPodcast(){
+function getPodcast(podcastId) {
     const url = `/v1/podcast/get?pid=${podcastId}`;
-    axios.get(bastUrl+url, {
-        headers
-    }).then(res => {
-        debugger
-        console.log(res)
-    })
+    const methods = "get";
+    const params = {};
+    return baseRequest({url, methods, params})
 }
-getPodcast();
 
 //获取播客的单集信息
-function episodeList(){
+function episodeList(podcastId) {
     const url = `/v1/episode/list`;
+    const methods = "post";
     const params = {
         "pid": podcastId,
         "limit": 25,
-    }
-    axios.post(bastUrl+url, params,{
-        headers
-    }).then(res => {
-        debugger
-        console.log(res)
-    })
+    };
+    return baseRequest({url, methods, params})
 }
-episodeList();
+
+getPodcast("5e280fa7418a84a0461f8e98\n").then(res => {
+    console.log(res.status)
+    console.log(res.data.data)
+}).catch(err => {
+    console.log(err.code)
+})
+// episodeList(podcastId).then(res => {
+//     console.log(res.status)
+// }).catch(err => {
+//     console.log(err.code)
+// })
+
+
+exports.getPodcast = getPodcast;
+exports.episodeList = episodeList;
+
