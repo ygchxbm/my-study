@@ -20,7 +20,17 @@ li {
     padding: 10px;
     border: 1px solid red;
 
-    .move{
-        opacity: 0;
+    .move {
+        background: transparent;
+        color: transparent;
+        border: 1px dashed #ccc;
     }
+}
+
+.drag-list {
+
+}
+
+.drag-item {
+
 }
