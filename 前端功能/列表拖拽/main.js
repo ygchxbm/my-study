@@ -1,16 +1,17 @@
-const oUl=document.querySelector('ul');
+const oUl = document.querySelector('ul');
 let sourceNode;
-oUl.addEventListener("dragstart",(e)=>{
-    console.log(e.target);
-    setTimeout(()=>{
+oUl.addEventListener("dragstart", (e) => {
+    setTimeout(() => {
         e.target.classList.add('move')
     })
-    sourceNode=e.target;
+    sourceNode = e.target;
 })
-oUl.addEventListener("dragenter",e=>{
-    if(e.target===oUl||e.target===sourceNode) return;
-    console.log(e.target)
+oUl.addEventListener("dragenter", e => {
+    if (e.target === oUl || e.target === sourceNode) return;
+    const sourceIndex = Array.from(oUl.children).indexOf(sourceNode);
+    const index = Array.from(oUl.children).indexOf(e.target);
+    oUl.insertBefore(sourceNode, index > sourceIndex ? e.target.nextSibling : e.target);
 })
-oUl.addEventListener("dragend",e=>{
-
+oUl.addEventListener("dragend", e => {
+    e.target.classList.remove('move');
 })
