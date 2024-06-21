@@ -2,16 +2,50 @@ const fs = require("node:fs");
 const path = require("node:path");
 const axios = require("axios");
 
+//web端登录小宇宙后本地缓存中可找到
 const refreshToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoiamwyeGFRclhLRVE4Vm1ZSmlNVHYwKzNsWVhVcHpDSG8xZEt3SGJYS1d4MUhUY0ZzbytacndxeW5GZWNsaWJpZUZldFhieVg2M1ArS1VMeXJVQXl4UFUxK1d1Z1EwSUltcnR6WUE1V0Q0aDVUSTdXb05RNWRYdGwxeDFoanlsVEZJb2ViWW1oUitCbGdhVHBvNCtyMGlVSnBMbER5dWZlM1NjNER3NDVpWmZuYTk4Rmx5Y29iU1wvKytmTmZSWTNvNyIsInYiOjMsIml2IjoiaWtuYzA2Uzg5STA0TFwvVlQ4Tm9RQ0E9PSIsImlhdCI6MTcxMjgyNjc3NS4xNDV9.5zP5YgKfrxm-woyBvOfRRuRnxVTmR1XOtKn_c0S_juU';
 
 let accessToken;
 const headers = {
     'x-jike-access-token': accessToken
 };
+const bastUrl = "https://www.xiaoyuzhoufm.com"
 
+//说明：
 //category,播客的类别
 //podcast，播客。pid=podcastId，一个播客的id
 //episode，播客里一个单集的音频。eid=episodeId，播客里一个单集的id
+
+
+async function main() {
+    accessToken = await refresh();
+    headers['x-jike-access-token'] = accessToken;
+
+    const oldFilePath = path.resolve(__dirname, 'downloadedPidList.json');
+    if (!await isDirectoryExists(oldFilePath)) {
+        await readDownloadedPidList()
+    }
+
+    const categoryRes = await listAll();
+    const categoryIds = categoryRes.data.data.map(item => item.id);
+    let pidList = await getPidList(categoryIds);
+
+    // const oldFilePath = path.resolve(__dirname, 'downloadedPidList.json');
+    pidList = await filterPidList(pidList, oldFilePath);
+
+
+    const podcastObjList = await getPodcastObj(pidList);
+
+    //下载音频文件保存的地址
+    const baseDownloadDirPath = path.resolve(__dirname, './media');
+    await downloadAll(podcastObjList, baseDownloadDirPath);
+
+    return 'end download'
+}
+
+main().then(res => {
+    console.log(res)
+});
 
 
 //刷新，获取最新的access-token
@@ -27,32 +61,20 @@ async function refresh() {
     }
 }
 
-async function showTime(func, option) {
-    const start = performance.now();
-    console.log('\n');
-    console.log(`${func.name} is running ...`);
-    console.log('\n');
-    const res = await func(option)
-    const end = performance.now();
-    console.log('\n');
-    console.log(`${func.name} end ———— ${end - start}ms`);
-    console.log('\n');
-    return res
-}
-
+//保存文件
 function saveFile(jsonString, filePath) {
     return new Promise((resolve, reject) => {
         fs.writeFile(filePath, jsonString, (err) => {
             if (err) {
                 reject(err)
             } else {
-                console.log("write successfully", filePath)
                 resolve("write successfully")
             }
         });
     })
 }
 
+//筛选pidList
 async function filterPidList(pidList, filePath) {
     if (!await pathExists(filePath)) {
         fs.writeFileSync(filePath, JSON.stringify([]), {encoding: 'utf-8'})
@@ -70,46 +92,10 @@ async function filterPidList(pidList, filePath) {
  * 第一次运行时打开，将downloaded_xiaoyuzhou.txt文件的值写入downloadedPidList.json，以便后续工作。
  * downloaded_xiaoyuzhou.txt文件为张光琰提供的文件，记录已经下载完5个音频的pid。
  */
-async function readDownloadedPidList(a) {
+async function readDownloadedPidList() {
     const filePath = path.resolve(__dirname, './downloaded_xiaoyuzhou.txt');
     const downloadedPidList = fs.readFileSync(filePath, 'utf-8').split(/\r?\n/);
-    await saveFile(JSON.stringify(downloadedPidList), './downloadedPidList.json')
-}
-
-
-async function main() {
-    accessToken = await refresh();
-    headers['x-jike-access-token'] = accessToken;
-
-
-    // const hzb=await episodes_list('60329b03a6d0c36413c92e6d')
-
-    // await readDownloadedPidList()
-
-    // const categoryRes = await listAll();
-    // const categoryIds = categoryRes.data.data.map(item => item.id);
-    // let pidList = await getPidList(categoryIds);
-    // let pidList = await showTime(getPidList, categoryIds);
-
-    const filePath = path.resolve(__dirname, './pidList.json')
-    let pidList = await getPidListFromFile(filePath);
-
-    const oldFilePath = path.resolve(__dirname, 'downloadedPidList.json');
-    pidList = await filterPidList(pidList, oldFilePath);
-    await saveFile(JSON.stringify(pidList), './pidList.json');
-
-    // const episodes = await getPodcastObj(pidList)
-    const podcastObjList = await showTime(getPodcastObj, pidList);
-
-    // const podcastObjList = await getPodcastObjFromFile(path.resolve(__dirname, './podcastObjList.json'));
-    // await saveFile(JSON.stringify(podcastObjList), './podcastObjList.json');
-
-    // await downloadAll(podcastObjList);
-
-
-    await showTime(downloadAll, podcastObjList);
-
-    return 'javascript run end'
+    await saveFile(JSON.stringify(downloadedPidList.filter(item => item)), './downloadedPidList.json')
 }
 
 //获取所有的pid
@@ -172,12 +158,8 @@ async function getPodcastObj(pidList) {
         episodesArray.push(...await Promise.all(episodesPromise))
     }
 
-    // await saveFile(JSON.stringify(episodesArray), "./episodesArray.json");
-
-    // const episodesArray = require('./episodesArray.json')
-
-    const podcastObj = episodesArray.map((episodes, index) => {
-        const pid =pidList[index];
+    return episodesArray.map((episodes, index) => {
+        const pid = pidList[index];
         const children = []
         let num = 0;
         if (episodes.length > 0) {
@@ -209,21 +191,22 @@ async function getPodcastObj(pidList) {
             pid, children
         }
     })
-
-    return podcastObj
 }
 
-async function getPodcastObjFromFile(filePath) {
-    return require(filePath);
-}
-
-async function downloadAll(podcastObjList) {
-    for (const podcastObj of podcastObjList.slice(0, 4)) {
-        const pid = podcastObj.pid
+//下载所有音频
+async function downloadAll(podcastObjList, baseDownloadDirPath) {
+    console.log('start download\n')
+    for (const podcastObj of podcastObjList) {
+        const pid = podcastObj.pid;
+        if (!pid) return
         const promiseArray = []
+        const pidDir = path.resolve(baseDownloadDirPath, pid);
+        if (!isDirectoryExists(pidDir)) {
+            fs.mkdirSync(pidDir, {recursive: true});
+        }
         console.log(pid + ' is downloading...')
         for (const item of podcastObj.children) {
-            const filePath = path.resolve(__dirname, `media/${pid}/${item.mediaId}`)
+            const filePath = path.resolve(pidDir, `${item.mediaId}`)
             const url = podcastObj.children[0].mediaUrl;
             promiseArray.push(download(url, filePath));
             // await download(url, filePath)
@@ -234,25 +217,45 @@ async function downloadAll(podcastObjList) {
             if (typeof item === "boolean" && item) {
                 return item
             }
-        }).length === 5) {
+        }).length === onePodcastMediaDownloadRes.length) {
             const filePath = path.resolve(__dirname, 'downloadedPidList.json')
             await appendFile(filePath, pid);
+            console.log(pid + ' download successfully\n')
         }
     }
 }
 
-async function initFile(filePath) {
-// 要写入的空JSON对象
-    const emptyJson = '[]';
-
+// 下载音频
+async function download(url, filePath) {
     try {
-        fs.writeFileSync(filePath, emptyJson, 'utf8');
-        console.log('JSON文件已被清空');
+        const res = await axios({
+            method: 'get',
+            url,
+            responseType: 'stream'
+        })
+
+        return new Promise((resolve, reject) => {
+            const writer = fs.createWriteStream(filePath);
+            res.data.pipe(writer);
+            let error = null;
+            writer.on('error', err => {
+                error = err;
+                writer.close();
+                reject(err);
+            });
+
+            writer.on('close', () => {
+                if (!error) {
+                    resolve(true);
+                }
+            });
+        });
     } catch (err) {
-        console.error('清空JSON文件时发生错误:', err);
+        return false
     }
 }
 
+//向文件内添加已下载所有音频的pid
 async function appendFile(filePath, pid) {
     if (!await pathExists(filePath)) {
         fs.writeFileSync(filePath, JSON.stringify(pid), {encoding: 'utf-8'})
@@ -268,50 +271,12 @@ async function appendFile(filePath, pid) {
     }
 }
 
-// 下载音频
-async function download(url, filePath) {
-    if (!await pathExists(filePath)) {
-        try {
-            const res = await axios({
-                method: 'get',
-                url,
-                responseType: 'stream'
-            })
-            const dir = path.dirname(filePath);
-            if (!isDirectoryExists(dir)) {
-                fs.mkdirSync(dir, {recursive: true});
-            }
-
-            return new Promise((resolve, reject) => {
-                const writer = fs.createWriteStream(filePath);
-                res.data.pipe(writer);
-                let error = null;
-                writer.on('error', err => {
-                    error = err;
-                    writer.close();
-                    reject(err);
-                });
-
-                writer.on('close', () => {
-                    if (!error) {
-                        resolve(true);
-                    }
-                });
-            });
-        } catch (err) {
-            // console.log(err)
-            return false
-        }
-    } else {
-        return true
-    }
-
-}
-
+//判断路径是否有该文件夹
 function isDirectoryExists(dirPath) {
     return fs.existsSync(dirPath) && fs.lstatSync(dirPath).isDirectory();
 }
 
+//判断路径是否有该文件
 async function pathExists(filePath) {
     return new Promise((resolve, reject) => {
         fs.access(filePath, fs.constants.F_OK, (err) => {
@@ -331,12 +296,6 @@ async function pathExists(filePath) {
     });
 }
 
-main().then(res => {
-    console.log(res)
-});
-
-const bastUrl = "https://www.xiaoyuzhoufm.com"
-
 //获取小宇宙app所有分类
 async function listAll() {
     const url = "/v1/category/list-all";
@@ -355,7 +314,7 @@ async function listByTab(categoryId, tab, loadMoreKey) {
 //获取播客下的前15个音频,传入num参数后 则获取前num个音频
 async function episodes_list(pid) {
     const url = `
-    https://www.xiaoyuzhoufm.com/v1/episode/list`;
+        https://www.xiaoyuzhoufm.com/v1/episode/list`;
     const params = {pid};
 
     try {
