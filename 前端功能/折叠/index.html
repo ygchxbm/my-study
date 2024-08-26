@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        .con {
+            height: 40px;
+            border: 1px solid red;
+        }
+
+        /*.con:hover {*/
+        /*    height: 120px;*/
+        /*    transition: height 2s linear 0s;*/
+        /*}*/
+    </style>
+</head>
+<body>
+<div>
+    <div>header</div>
+    <button>click me</button>
+    <div class="con">content</div>
+    <div>footer</div>
+</div>
+<script>
+    const btn = document.querySelector("button");
+    const con = document.querySelector(".con");
+    let flag = false;
+    btn.onclick = () => {
+        if (!flag) {
+            con.style.cssText = 'height: 120px; transition: height 0.2s ease 0s;'
+            flag = true;
+        } else {
+            con.style.cssText = 'height: 40px; transition: height 0.2s ease 0s;';
+            flag = false;
+        }
+    }
+    console.log(btn)
+</script>
+</body>
+</html>
