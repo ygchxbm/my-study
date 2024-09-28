@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+       html,body{
+           width: 100%;
+           height: 100%;
+           margin: 0;
+           padding: 0;
+       }
+
+        .root {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+
+            .header {
+                height: 80px;
+                background-color: lightpink;
+            }
+
+            .main-content {
+                width: 100%;
+                height: 100%;
+                display: flex;
+
+                .aside {
+                    width: 220px;
+                    background-color: lightblue;
+                }
+
+                .main {
+                    width: 100%;
+                    background-color: lightgreen;
+                }
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="root">
+    <div class="header"></div>
+    <div class="main-content">
+        <div class="aside"></div>
+        <div class="main"></div>
+    </div>
+</div>
+</body>
+</html>
