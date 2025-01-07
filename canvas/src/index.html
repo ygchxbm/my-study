@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        canvas{
+            width: 100%;
+            /*height: 500px;*/
+        }
+    </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<script>
+    // // 创建img元素并设置src属性
+    // const image = new Image();
+    // image.src = 'image/image1.png'; // 替换为你的图片路径
+    //
+    // // 获取Canvas元素和绘图上下文
+    // const canvas = document.getElementById('canvas');
+    // const ctx = canvas.getContext('2d');
+    //
+    // // 当图片加载完成后绘制到canvas
+    // image.onload = function() {
+    //     // 将图片绘制到Canvas上
+    //     ctx.drawImage(image, 0, 0);
+    //
+    //     // 在图片上绘制一个矩形
+    //     ctx.strokeStyle = 'red'; // 设置线条颜色
+    //     ctx.lineWidth = 5; // 设置线条宽度
+    //     ctx.strokeRect(100, 100, 200, 100); // 绘制矩形，参数分别为x, y, width, height
+    // };
+    draw()
+    function draw() {
+        var canvas = document.getElementById("canvas");
+        if (canvas.getContext) {
+            var ctx = canvas.getContext("2d");
+
+            ctx.beginPath();
+            ctx.arc(75, 75, 50, 0, Math.PI * 2, true); // 绘制
+            ctx.moveTo(110, 75);
+            ctx.arc(75, 75, 35, 0, Math.PI, false); // 口 (顺时针)
+            // ctx.moveTo(65, 65);
+            // ctx.arc(60, 65, 5, 0, Math.PI * 2, true); // 左眼
+            // ctx.moveTo(95, 65);
+            // ctx.arc(90, 65, 5, 0, Math.PI * 2, true); // 右眼
+            ctx.stroke();
+        }
+    }
+
+</script>
+</body>
+</html>
