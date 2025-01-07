@@ -4,3 +4,4 @@ yarn-error.log
 **.m4a
 **dist
 **node_modules
+**saveFile
