@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        @keyframes img_yinyingfan {
+            0% {
+                transform: scale(0.8);
+                -webkit-transform: scale(0.8);
+                -moz-transform: scale(0.8);
+                -ms-transform: scale(0.8);
+                -o-transform: scale(0.8);
+            }
+            100% {
+                transform: scale(1);
+                -webkit-transform: scale(1);
+                -moz-transform: scale(1);
+                -ms-transform: scale(1);
+                -o-transform: scale(1);
+            }
+        }
+
+        .one {
+            width: 300px;
+            height: 300px;
+            margin: 300px;
+            background-color: #f8f8f8;
+            position: relative;
+            cursor: pointer;
+            display: block;
+            /*animation: 0.5s linear 0s 1 normal forwards running img_yinyingfan;*/
+
+            .qq {
+                width: 200px;
+                height: 200px;
+                position: relative;
+                background-color: lightcoral;
+                transition: top 0.5s;
+                top:0;
+
+                &:hover {
+                    top: -100px;
+                }
+            }
+
+            .ww {
+                width: 200px;
+                height: 200px;
+                background-color: lightblue;
+                position: absolute;
+                bottom: 0;
+                left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="one">
+    <div class="qq"></div>
+    <div class="ww"></div>
+</div>
+</body>
+</html>
