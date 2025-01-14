@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bilibili视频爬取</title>
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        .main {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+
+            .content {
+                padding: 5em;
+                border-radius: 1em;
+                background: #f8f8f8;
+                display: flex;
+                flex-direction: column;
+                gap: 1em 0;
+
+                .row {
+                    display: flex;
+                    gap: 0 10px
+                }
+            }
+        }
+
+        input {
+            padding-left: 5px;
+            height: 30px;
+            border-radius: 5px;
+            border-width: 1px;
+            border-color: #dddfe6;
+            border-style: solid;
+
+
+            &:hover {
+                border-color: #c1c4cc;
+            }
+
+            &:focus-visible {
+                border-color: #5e9eff;
+                outline: none;
+            }
+        }
+
+        button {
+            border-radius: 4px;
+            border-width: 0;
+            padding: 10px 15px;
+            background: #5e9eff;
+            color: white;
+            letter-spacing: 1px;
+            cursor: pointer;
+            min-width: 80px;
+
+            &:hover {
+                background: #89bbff;
+            }
+        }
+
+        label {
+            /*display: inline-block;*/
+            width: 300px;
+            display: flex;
+            align-items: baseline;
+            gap: 0 8px;
+            justify-content: end;
+            margin-right: 40px;
+        }
+
+        input {
+            width: 198px;
+        }
+
+        .btn-not-allowed {
+            cursor: not-allowed;
+            background: #eef5ff;
+            color: #89bbff;
+
+            &:hover {
+                background: #eef5ff;
+            }
+        }
+
+        .
+    </style>
+</head>
+<body>
+<div class="main">
+    <div class="content">
+        <div class="row">
+            <label>
+                关键字
+                <input class="keyword-inp" placeholder="请输入关键字">
+            </label>
+            <button class="keyword-btn-download">一键爬取</button>
+            <button class="keyword-btn-marge">一键合成视频</button>
+        </div>
+        <div class="row">
+            <label>
+                BVId
+                <input class="BVid-inp" placeholder="请输入BVId">
+            </label>
+            <button class="BVId-btn">爬取</button>
+            <button class="marge-btn">合成音视频</button>
+        </div>
+    </div>
+
+</div>
+<script>
+    const kInp = document.querySelector('.keyword-inp');
+    const KBtnD = document.querySelector('.keyword-btn-download');
+    const KBtnM = document.querySelector('.keyword-btn-marge');
+    const BInp = document.querySelector('.BVid-inp');
+    const BBtn = document.querySelector('.BVId-btn');
+    const MBtn = document.querySelector('.marge-btn');
+
+    const btnClassHandler = (inp, btnS) => {
+        BBtn.disabled = !inp.value?.trim();
+        if (!inp.value?.trim()) {
+            for (const btn of btnS) {
+                btn.classList.add('btn-not-allowed')
+            }
+        } else {
+            for (const btn of btnS) {
+                btn.classList.remove('btn-not-allowed')
+            }
+        }
+    }
+
+    btnClassHandler(kInp, [KBtnD]);
+    btnClassHandler(BInp, [BBtn, MBtn]);
+
+
+    kInp.addEventListener('input', () => {
+        btnClassHandler(kInp, [KBtnD]);
+
+    })
+
+    BInp.addEventListener('input', () => {
+        btnClassHandler(BInp, [BBtn, MBtn]);
+
+    })
+
+
+    KBtnD.addEventListener('click', () => {
+        const keyword = kInp.value;
+        if (keyword) {
+            fetch('/keyword', {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json' // 确保请求头正确设置为 JSON
+                },
+                body: JSON.stringify({keyword}),
+            }).then((response) => response.json())
+                .then((data) => console.log(data));
+        } else {
+            console.error('keyword不可为空')
+        }
+
+    })
+
+    KBtnM.addEventListener('click', () => {
+        fetch('/margeAll', {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json' // 确保请求头正确设置为 JSON
+            },
+        }).then((response) => response.json())
+            .then((data) => console.log(data));
+    })
+
+    BBtn.addEventListener('click', () => {
+        const BVId = BInp.value;
+        if (BVId) {
+            fetch('/BVId', {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json' // 确保请求头正确设置为 JSON
+                },
+                body: JSON.stringify({BVId}),
+            }).then((response) => response.json())
+                .then((data) => console.log(data));
+        } else {
+            console.error('BVId不可为空')
+        }
+
+    })
+
+    MBtn.addEventListener('click', () => {
+        const BVId = BInp.value;
+        if (BVId) {
+            fetch('/marge', {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json' // 确保请求头正确设置为 JSON
+                },
+                body: JSON.stringify({BVId}),
+            }).then((response) => response.json())
+                .then((data) => console.log(data));
+        } else {
+            console.error('BVId不可为空')
+        }
+
+    })
+
+</script>
+</body>
+</html>

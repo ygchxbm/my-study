@@ -192,7 +192,7 @@ async function getViewText(fileUrl) {
 
 }
 
-main();
+// main();
 
 async function main() {
     const BVId = 'BV14trPYvEw3';
