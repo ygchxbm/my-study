@@ -2,40 +2,11 @@ const fs = require("node:fs");
 const path = require("node:path");
 const axios = require("axios");
 
-const keyWord = "LoL手游教学"
-
-
-async function keywordSearch(keyWord) {
-    const url = `https://search.bilibili.com/video?keyword=${keyWord}&from_source=webtop_search&spm_id_from=333.1007&search_source=5&page=2&o=36`
-    try {
-        const res = await axios.get(url);
-        const dataString = typeof res.data === 'string' ? res.data : JSON.stringify(res.data); // 确保是字符串
-        const regex = /bvid:"(BV[A-Za-z0-9]{10})"/g;
-        let match;
-        const BVIdList = [];
-        while ((match = regex.exec(dataString)) !== null) {
-            BVIdList.push(match[1]); // match[1] 是捕获组中的内容，即BV号
-        }
-
-        const dirPath = path.resolve(__dirname, '../saveFile');
-        await createDirectory(dirPath);
-
-        const filePath = path.resolve(dirPath, 'BVIdList.txt');
-        await fs.writeFileSync(filePath, BVIdList.join('\n')); // 将数组转换为以换行符分隔的字符串
-        await fs.writeFileSync(path.resolve(dirPath, 'searchInfo.html'), res.data); // 将数组转换为以换行符分隔的字符串
-
-        return BVIdList;
-    } catch (err) {
-        console.error('Error during keyword search:', err);
-        return false;
-    }
-}
-
-
 const BVId = 'BV1nF411C7Rm';
 
 const fileUrl = path.resolve(__dirname, `../saveFile/${BVId}.html`);
 const {JSDOM} = require('jsdom');
+const {set} = require("express/lib/application");
 
 // getBVInfo(BVId)
 async function getBVInfo(BVId) {
@@ -299,7 +270,7 @@ async function main() {
 
 
 async function createDirectory(dirPath) {
-    fs.mkdir(dirPath, {recursive: true}, (err) => {
+    fs.mkdirSync(dirPath, {recursive: true}, (err) => {
         if (err) {
             if (err.code === 'EEXIST') {
                 // 文件夹已存在
@@ -314,4 +285,159 @@ async function createDirectory(dirPath) {
         }
     });
 }
+
+
+const heroNameTextFilePath = path.resolve(__dirname, '../saveFile/lolm_hero_name.txt')
+
+
+const orderMap = {
+    1: 'click',//最多播放
+    2: 'stow'//最多收藏
+}
+
+
+const onePageSearch = async (keyword, order, page) => {
+    //获取截至2025-1-15前半年的数据，可改'pubtime_end_s'修改截至日期
+    let pageUrl = ''
+    if (page > 1) {
+        pageUrl = `&page=${page}&o=${(page - 1) * 42}`;
+    }
+    const url = `https://search.bilibili.com/all?keyword=${keyword}&from_source=webtop_search&spm_id_from=333.1007&search_source=3&pubtime_begin_s=1721404800&pubtime_end_s=1736956799${pageUrl}&order=${order}`
+    try {
+        const res = await axios.get(url);
+        // await saveFile(path.resolve(__dirname,'hzb.html'), res.data)
+
+        const dataString = typeof res.data === 'string' ? res.data : JSON.stringify(res.data); // 确保是字符串
+        const regex = /<a\s+[^>]*href="[^"]*\/video\/([^"]+?)(?=\/")/g;// /bvid:"(BV[A-Za-z0-9]{10})"/g;
+        let match;
+        const BVIdList = [];
+        while ((match = regex.exec(dataString)) !== null) {
+            BVIdList.push(match[1]); // match[1] 是捕获组中的内容，即BV号
+        }
+        const uniqueBVIdList = [...new Set(BVIdList)]
+        console.log(uniqueBVIdList.length)
+        return uniqueBVIdList
+    } catch (err) {
+        console.error('Error during keyword search:', err);
+
+    }
+}
+
+// onePageSearch()
+
+const oneKeywordSearch = async (keyword) => {
+    const oneKeywordBVIdList = [];
+    const maxPage = 10;
+
+    for (let page = 0; page < maxPage; page++) {
+        console.log('click page', page)
+        const onePageBVIdList = await onePageSearch(keyword, 'click', page + 1);
+        if (onePageBVIdList.length > 0) {
+            oneKeywordBVIdList.push(...onePageBVIdList);
+        } else {
+            console.log('break')
+            break
+        }
+    }
+
+    for (let page = 0; page < maxPage; page++) {
+        console.log('stow page', page)
+        const onePageBVIdList = await onePageSearch(keyword, 'stow', page + 1);
+        if (onePageBVIdList.length > 0) {
+            oneKeywordBVIdList.push(...onePageBVIdList);
+        } else {
+            console.log('break')
+            break
+        }
+    }
+
+    console.log('one keyword Search BVId list', oneKeywordBVIdList.length)
+    const uniqueOneKeywordBVIdList = [...new Set(oneKeywordBVIdList)]
+    console.log('unique one keyword Search BVId list', uniqueOneKeywordBVIdList.length)
+
+
+    return uniqueOneKeywordBVIdList
+}
+
+const kwHeads = ['英雄联盟手游', 'lol手游', 'lolm']
+
+const oneHeroSearch = async (heroNames) => {
+    const oneHeroBVIdList = [];
+    console.log(heroNames, '搜索开始')
+    for (const kwHead of kwHeads) {
+        for (const heroName of heroNames) {
+            const keyword = kwHead + heroName;
+            console.log('')
+            console.log(keyword, '搜索开始')
+            oneHeroBVIdList.push(...await oneKeywordSearch(keyword)
+            )
+            console.log(keyword, '搜索结束')
+        }
+    }
+    const uniqueOneHeroBVIdList = [...new Set(oneHeroBVIdList)];
+
+    const name1 = heroNames[0]
+    const heroDirPath = path.resolve(__dirname, '../saveFile/', name1)
+
+    console.log(heroNames, '搜索结束')
+    console.log('one hero all BVId list', uniqueOneHeroBVIdList.length)
+
+    const infoFunc = () => {
+        console.log(name1, "的BVId文件已保存");
+    }
+    const errorInfoFunc = () => {
+        console.error(name1, "的BVId文件保存失败");
+    }
+    if (uniqueOneHeroBVIdList.length > 0) {
+        await createDirectory(heroDirPath);
+        await saveFile(path.resolve(heroDirPath, `${name1}.json`), JSON.stringify(uniqueOneHeroBVIdList), infoFunc, errorInfoFunc);
+        return uniqueOneHeroBVIdList
+    }else {
+        console.log('失效:',name1)
+        return []
+    }
+}
+
+// oneHeroSearch(['盖伦', '大宝剑', '草丛伦', '德玛', '德玛西亚之力'])
+// oneHeroSearch(['安妮', '火女', '黑暗之女'])
+
+readHeroNameTxt(heroNameTextFilePath)
+
+async function readHeroNameTxt(heroNameTextFilePath) {
+    if (!heroNameTextFilePath) {
+        console.log('请输入英雄联盟英雄名称list')
+    }
+    try {
+        const res = fs.readFileSync(heroNameTextFilePath, 'utf-8');
+        const heroNameList = res.trim().split('\n').map(heroNames => {
+            return heroNames.trim().split(',')
+        })
+        let allBVIdList = [];
+        for (const heroNames of heroNameList) {
+            allBVIdList.push(...await oneHeroSearch(heroNames))
+        }
+        const uniqueAllBVIdList = [...new Set(allBVIdList)];
+        console.log('所有BV共', uniqueAllBVIdList.length)
+    } catch (e) {
+        console.error(e)
+    }
+}
+
+async function saveFile(path, data, info, errInfo) {
+    try {
+        fs.writeFileSync(path, data);
+        if (info) {
+            info()
+        }
+    } catch (e) {
+        if (errInfo) {
+            errInfo()
+        }
+        console.error(e)
+    }
+}
+
+
+
+
 
