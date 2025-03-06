@@ -9,7 +9,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@imengyu/vue3-context-menu": "^1.4.4",
+    "jsmind": "^0.8.1",
     "loadsh": "^0.0.4",
+    "mind-elixir": "^4.4.1",
     "vue": "^3.4.29"
   },
   "devDependencies": {

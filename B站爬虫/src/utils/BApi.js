@@ -5,14 +5,15 @@ const {JSDOM} = require("jsdom");
 const ffmpeg = require("ffmpeg-static");
 const {execSync} = require("child_process");
 
-const dirPath = path.resolve(__dirname, `../saveFile/BVs`)
+// const dirPath = path.resolve(__dirname, `../saveFile/BVs`)
 
-const saveBV = async (BVId) => {
+const saveBV = async (BVId, dirPath) => {
     console.log('')
     if (!BVId) {
         console.error('BVId不存在！')
     }
     console.log(`${BVId}开始`)
+    await createDirectory(path.resolve(dirPath, BVId))
     const infoFileUrl = path.resolve(dirPath, BVId, `${BVId}.json`);
     const videoFileUrl = path.resolve(dirPath, BVId, `${BVId}.mp4`);
     const audioFileUrl = path.resolve(dirPath, BVId, `${BVId}.mp3`);
@@ -28,15 +29,44 @@ const saveBV = async (BVId) => {
     if (!(isInfoExists && isVideoExists && isAudioExists)) {
         const res = await getBVAllInfo(BVId);
         if (res) {
-            const {videoUrl, audioUrl} = await saveBVInfo(res);
-            await getBVVideo(videoUrl);
-            await getBVAudio(audioUrl);
+            try {
+                const {videoUrl, audioUrl} = await saveBVInfo(res);
+                await getBVVideo(videoUrl);
+                await getBVAudio(audioUrl);
+            } catch (e) {
+                console.error(e)
+            }
         }
 
     } else {
         console.log("视频所有信息已存在");
     }
 
+    const outputFilePath = path.resolve(dirPath, BVId, `${BVId}-marge.mp4`);
+    isInfoExists = fs.existsSync(infoFileUrl);
+    isVideoExists = fs.existsSync(videoFileUrl);
+    if (!fs.existsSync(outputFilePath)) {
+        // 检查输入文件是否存在
+        if (!isInfoExists) {
+            console.error('视频文件不存在，请检查文件路径。');
+        } else if (!isVideoExists) {
+            console.error('音频文件不存在，请检查文件路径。');
+        } else {
+            const ffmpegCommand = `${ffmpeg}  -i ${videoFileUrl} -i ${audioFileUrl} -c:v copy -c:a aac -strict experimental -map 0:v:0 -map 1:a:0 ${outputFilePath}`
+            // console.log('')
+            console.log('合成视频文件生成中......')
+            try {
+                execSync(ffmpegCommand)
+            } catch (e) {
+                console.error('合成视频生成失败')
+                console.error(e)
+            }
+            console.log(BVId + '结束合成')
+        }
+    } else {
+        console.log('合成视频已经存在')
+        console.log(BVId + '结束合成')
+    }
     console.log(`${BVId}结束`)
 
 
@@ -194,6 +224,7 @@ const saveBV = async (BVId) => {
     }
 }
 
+// const saveBVFromJson()
 const keyWordSearch = async (keyWord) => {
     const url = `https://search.bilibili.com/all?keyword=${keyWord}&from_source=webtop_search&spm_id_from=333.788&search_source=5&order=click&pubtime_begin_s=1720886400&pubtime_end_s=1736438399`
     try {
@@ -248,7 +279,7 @@ const margeBV = async (BVId) => {
             try {
                 execSync(ffmpegCommand)
             } catch (e) {
-                console.error('合成视频生成失败')
+                console.error('合成视频生成失败！！！')
                 console.error(e)
             }
             console.log(BVId + '结束合成')
@@ -303,6 +334,45 @@ const margeAllBV = async () => {
     }
     console.log('结束合并')
 }
+
+const dir = path.resolve(__dirname, '../../saveFile/heroes');
+const saveFileBV = async (dir) => {
+    try {
+        const files = fs.readdirSync(dir);
+        for (const file of files) {
+            //第一层遍历
+            const fullPath = path.join(dir, file);
+            const stats = fs.statSync(fullPath);
+            if (stats.isDirectory()) {
+                //是文件夹
+                const files2 = fs.readdirSync(fullPath);
+                //第二次遍历
+                for (const file2 of files2) {
+                    const fullPath2 = path.join(fullPath, file2);
+                    const stats2 = fs.statSync(fullPath2);
+                    if (stats2.isFile()) {
+                        const extName = path.extname(fullPath2);
+                        const fileNameWithoutExt = path.basename(fullPath2, extName);
+                        if (extName === '.json') {
+                            const str = fs.readFileSync(fullPath2);
+                            const BVIdList = JSON.parse(str);
+                            for (const BVId of BVIdList) {
+                                const BVsPAth = path.resolve(fullPath2, '../BVs')
+                                // console.log(BVId, BVsPAth)
+                                await saveBV(BVId, path.resolve(fullPath2, '../BVs'))
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+    } catch (err) {
+        console.error(`Unable to scan directory: ${err}`);
+    }
+}
+saveFileBV(dir)
+
 
 async function createDirectory(dirPath) {
     fs.mkdir(dirPath, {recursive: true}, (err) => {

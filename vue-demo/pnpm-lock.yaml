@@ -8,9 +8,18 @@ importers:
 
   .:
     dependencies:
+      '@imengyu/vue3-context-menu':
+        specifier: ^1.4.4
+        version: 1.4.4
+      jsmind:
+        specifier: ^0.8.1
+        version: 0.8.6
       loadsh:
         specifier: ^0.0.4
         version: 0.0.4
+      mind-elixir:
+        specifier: ^4.4.1
+        version: 4.4.1
       vue:
         specifier: ^3.4.29
         version: 3.4.31(typescript@5.5.3)
@@ -184,6 +193,9 @@ packages:
     engines: {node: '>=12'}
     cpu: [x64]
     os: [win32]
+
+  '@imengyu/vue3-context-menu@1.4.4':
+    resolution: {integrity: sha512-Zjh1BbrvcNbZvsWr9IJl9KQUomf50EeP2GT+mWk63sqatDZxG7ZFX1eltrwRyfSBr+SuFpMvdYv/yRxpBsyw6w==}
 
   '@jridgewell/sourcemap-codec@1.5.0':
     resolution: {integrity: sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ==}
@@ -369,12 +381,18 @@ packages:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
 
+  jsmind@0.8.6:
+    resolution: {integrity: sha512-IBNeHvx+OaRHSmGvlgV6fIFSb/DhOznR5xTW/Fm2YVbgZLRRb/u6P5++bxENNGOSq2SFt6dpYQfmK4Z353OLjA==}
+
   loadsh@0.0.4:
     resolution: {integrity: sha512-U+wLL8InpfRalWrr+0SuhWgGt10M4OyAk6G8xCYo2rwpiHtxZkWiFpjei0vO463ghW8LPCdhqQxXlMy2qicAEw==}
     deprecated: This is a typosquat on the popular Lodash package. This is not maintained nor is the original Lodash package.
 
   magic-string@0.30.10:
     resolution: {integrity: sha512-iIRwTIf0QKV3UAnYK4PU8uiEc4SRh5jX0mwpIwETPpHdhVM4f53RSwS/vXvN1JhGX+Cs7B8qIq3d6AH49O5fAQ==}
+
+  mind-elixir@4.4.1:
+    resolution: {integrity: sha512-q2rzRXgd6iqF3UdenM88HB4Ohb0/62/3W3PXKMBRBLjcCXt/pxlLuTMb4QrqP7sX9HoWNFVBeNt+1S521h3TRw==}
 
   minimatch@9.0.5:
     resolution: {integrity: sha512-G6T0ZX48xgozx7587koeX9Ys2NYy6Gmv//P89sEte9V9whIapMNF4idKxnW2QtCcLiTWlb/wfCabAtAFWhhBow==}
@@ -553,6 +571,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.21.5':
     optional: true
+
+  '@imengyu/vue3-context-menu@1.4.4': {}
 
   '@jridgewell/sourcemap-codec@1.5.0': {}
 
@@ -737,11 +757,15 @@ snapshots:
 
   he@1.2.0: {}
 
+  jsmind@0.8.6: {}
+
   loadsh@0.0.4: {}
 
   magic-string@0.30.10:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.0
+
+  mind-elixir@4.4.1: {}
 
   minimatch@9.0.5:
     dependencies:
