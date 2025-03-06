@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import {ref, onMounted, computed,shallowRef} from 'vue'
+import {ref, onMounted, computed, shallowRef} from 'vue'
 import MindMap from "simple-mind-map"
 import {ContextMenu, ContextMenuGroup, ContextMenuSeparator, ContextMenuItem} from '@imengyu/vue3-context-menu';
+import {Edit} from "@element-plus/icons-vue";
 
 const mindMapContainer = ref()
 let mindMap = null
@@ -115,6 +116,98 @@ const buttons = ref([
   },
 ])
 
+const menuData = ref([
+  {
+    label: '新增子节点',
+    handler: () => {
+      mindMap.execCommand('INSERT_CHILD_NODE')
+    },
+  },
+  {
+    label: '新增邻节点',
+    handler: () => {
+      mindMap.execCommand('INSERT_NODE')
+    },
+  },
+  {
+    label: '收起',
+    handler: () => {
+
+    },
+  },
+  {
+    label: '插入',
+    children: [
+      {
+        label: '图片',
+        handler: () => {
+          activeNodes.value.forEach((node) => {
+            node.setImage({
+              url: 'https://lxqnsys.oss-cn-beijing.aliyuncs.com/qlx/xh2AXkBxYm5jGe5fD7DWYrC5b.png',
+              title: '图片的标题或描述',
+              width: 100,// 图片的宽高也不能少
+              height: 100
+            })
+          })
+        }
+      },
+      {
+        label: '图标',
+        handler: () => {
+          const iconList = ['priority_1', 'priority_2']
+          activeNodes.value.forEach(node => {
+            node.setIcon(iconList)
+          })
+        }
+      },
+      {
+        label: '备注',
+        handler: () => {
+          activeNodes.value.forEach(node => {
+            node.setNote('备注内容')
+          })
+        }
+      },
+      {
+        label: '标签',
+        handler: () => {
+          activeNodes.value.forEach(node => {
+            node.setTag(['标签1', '标签2'])
+          })
+        }
+      },
+      {
+        label: '超链接',
+        handler: () => {
+          activeNodes.value.forEach(node => {
+            node.setHyperlink('http://lxqnsys.com/', '理想青年实验室')
+          })
+        }
+      },
+      {
+        label: '概要',
+        handler: () => {
+          mindMap.execCommand('ADD_GENERALIZATION', {
+            text: '自定义概要内容'
+          })
+        }
+      },
+      {
+        label: '关联线',
+        handler: () => {
+          mindMap.associativeLine.createLineFromActiveNode()
+        }
+      },
+    ]
+  },
+  {
+    label: '删除节点',
+    handler: () => {
+      mindMap.execCommand('REMOVE_NODE')
+    },
+  },
+])
+
 // 当前右键点击的类型
 const type = ref('')
 // 如果点击的节点，那么代表被点击的节点
@@ -126,11 +219,11 @@ const top = ref(0)
 // 是否显示菜单
 const show = ref(false)
 
-const onMenuClick=(e)=>{
+const onMenuClick = (e) => {
   console.log(e)
 }
 
-const onLoopMenuClick=(e)=>{
+const onLoopMenuClick = (e) => {
   console.log(e)
 }
 
@@ -257,14 +350,33 @@ onMounted(() => {
         v-model:show="show"
         :options="optionsComponent"
     >
-      <context-menu-item label="Simple item" @click="onMenuClick(1)" />
-      <context-menu-group label="Menu with child">
-        <context-menu-item label="Item1" @click="onMenuClick(2)" />
-        <context-menu-item label="Item2" @click="onMenuClick(3)" />
-        <context-menu-group label="Child with v-for 50">
-          <context-menu-item v-for="index of 50" :key="index" :label="'Item3-'+index" @click="onLoopMenuClick(index)" />
-        </context-menu-group>
-      </context-menu-group>
+      <context-menu-item label="AI 用例衍生"/>
+      <!--      <context-menu-item label="AI 生成"/>-->
+      <!--            <context-menu-item label="新增子节点"/>-->
+      <!--      <template #default>-->
+      <!--        <span style="display: inline-flex; align-items: center;">-->
+      <!--          <i class="your-icon-class"> <Edit style="width: 1em; height: 1em; margin-right: 8px"/></i> &lt;!&ndash; 替换为你的图标 &ndash;&gt;-->
+      <!--          <span style="margin-left: 8px;">AI 用例衍生</span>-->
+      <!--        </span>-->
+      <!--      </template>-->
+      <!--      <context-menu-item label="新增邻节点"/>-->
+      <!--      <context-menu-group label="收起">-->
+      <!---->
+      <!--      </context-menu-group>-->
+      <!--      <context-menu-group label="插入">-->
+      <!---->
+      <!--      </context-menu-group>-->
+      <!--      <context-menu-group label="标记节点类型">-->
+      <!---->
+      <!--      </context-menu-group>-->
+      <!--      <template v-for="item in menuData">-->
+      <!--        <context-menu-item v-if="!item?.children" :label="item.label" @click="item.handler"></context-menu-item>-->
+      <!--        <context-menu-group v-else :label="item.label">-->
+      <!--          <template v-for="i in item.children">-->
+      <!--            <context-menu-item :label="i.label" @click="i.handler"></context-menu-item>-->
+      <!--          </template>-->
+      <!--        </context-menu-group>-->
+      <!--      </template>-->
     </context-menu>
   </div>
 </template>
