@@ -1,26 +1,35 @@
 import request from "@/utils/request";
 import axios from "axios";
 
-export const login = (param) => {
+export const login = (data) => {
     return request({
         url: 'user/login',
         method: 'post',
-        data: param
+        data
     })
 }
 
-export const login1 = (param) => {
-    return axios.post('/api/v1/user/login',param)
+export const node_list = (data) => {
+    const {project_id, father_id, type_id} = data
+    return request({
+        url: `node/list?project_id=${project_id}&father_id=${father_id}&type_id=${type_id}`,
+        method: 'get',
+    })
 }
 
-export const login2 = (param) => {
-     request.post('user/login', param).then((response) => {
-         // 保存 token 到本地存储
-         if (response?.data.token) {
-             localStorage.setItem('token', response.data.token);
-         }
-         return response;
-     });
+export const node_add = (data) => {
+    return request({
+        url: `node/add`,
+        method: 'post',
+        data: data
+    })
 }
 
 
+export const node_delete = (node_id) => {
+    return request({
+        url: `node/delete`,
+        method: 'post',
+        data: {node_id}
+    })
+}
