@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import {ref, onMounted, computed, shallowRef} from 'vue'
 import MindMap from "simple-mind-map"
-import {ContextMenu, ContextMenuGroup, ContextMenuSeparator, ContextMenuItem} from '@imengyu/vue3-context-menu';
-import {Edit} from "@element-plus/icons-vue";
+import {ContextMenu, ContextMenuGroup, ContextMenuSeparator, ContextMenuItem} from '@imengyu/vue3-context-menu'
+import { ElDrawer} from 'element-plus'
+import {Close, Discount} from '@element-plus/icons-vue'
+import Drawer from "@/components/Drawer.vue"
+import {node_add, node_list, node_delete} from "@/api"
+import RichText from 'simple-mind-map/src/plugins/RichText.js'
 
 const mindMapContainer = ref()
 let mindMap = null
@@ -118,28 +122,69 @@ const buttons = ref([
 
 const menuData = ref([
   {
-    label: '新增子节点',
+    label: 'AI用例衍生',
+    type: 1,//item
     handler: () => {
-      mindMap.execCommand('INSERT_CHILD_NODE')
+      drawerVisible.value = true
+    },
+  },
+  {
+    label: 'AI生成',
+    type: 1,//item
+    handler: () => {
+      drawerVisible.value = true
+    },
+  },
+  {
+    type: 3,//分割线
+  },
+  {
+    label: '新增子节点',
+    type: 1,//item
+    handler: async () => {
+      if (activeNodes.value.length > 0) {
+        const {uid} = activeNodes.value[0];
+        const res = await node_add({"project_id": 1, "father_id": uid, "type_id": 1, "name": "新节点", "abs": "我是说明"})
+        if (res.data) {
+          const {id, name} = res.data
+          mindMap.execCommand('INSERT_CHILD_NODE', false, [], {
+            uid: id,
+            text: name
+          })
+        }
+      }
     },
   },
   {
     label: '新增邻节点',
-    handler: () => {
-      mindMap.execCommand('INSERT_NODE')
+    type: 1,//item
+    handler: async () => {
+      if (activeNodes.value.length > 0) {
+        const {parent} = activeNodes.value[0];
+        if (!parent) return
+        const {uid} = parent;
+        const res = await node_add({"project_id": 1, "father_id": uid, "type_id": 1, "name": "新节点", "abs": "我是说明"})
+        if (res.data) {
+          const {id, name} = res.data
+          mindMap.execCommand('INSERT_NODE', false, [], {
+            uid: id,
+            text: name
+          })
+        }
+      }
     },
   },
   {
     label: '收起',
-    handler: () => {
-
-    },
+    type: 2,//group
   },
   {
     label: '插入',
+    type: 2,
     children: [
       {
         label: '图片',
+        type: 1,//item
         handler: () => {
           activeNodes.value.forEach((node) => {
             node.setImage({
@@ -153,6 +198,7 @@ const menuData = ref([
       },
       {
         label: '图标',
+        type: 1,//item
         handler: () => {
           const iconList = ['priority_1', 'priority_2']
           activeNodes.value.forEach(node => {
@@ -162,6 +208,7 @@ const menuData = ref([
       },
       {
         label: '备注',
+        type: 1,//item
         handler: () => {
           activeNodes.value.forEach(node => {
             node.setNote('备注内容')
@@ -170,6 +217,7 @@ const menuData = ref([
       },
       {
         label: '标签',
+        type: 1,//item
         handler: () => {
           activeNodes.value.forEach(node => {
             node.setTag(['标签1', '标签2'])
@@ -178,6 +226,7 @@ const menuData = ref([
       },
       {
         label: '超链接',
+        type: 1,//item
         handler: () => {
           activeNodes.value.forEach(node => {
             node.setHyperlink('http://lxqnsys.com/', '理想青年实验室')
@@ -186,6 +235,7 @@ const menuData = ref([
       },
       {
         label: '概要',
+        type: 1,//item
         handler: () => {
           mindMap.execCommand('ADD_GENERALIZATION', {
             text: '自定义概要内容'
@@ -194,6 +244,7 @@ const menuData = ref([
       },
       {
         label: '关联线',
+        type: 1,//item
         handler: () => {
           mindMap.associativeLine.createLineFromActiveNode()
         }
@@ -202,8 +253,17 @@ const menuData = ref([
   },
   {
     label: '删除节点',
-    handler: () => {
-      mindMap.execCommand('REMOVE_NODE')
+    type: 1,
+    handler: async () => {
+      if (activeNodes.value.length > 0) {
+        const {uid} = activeNodes.value[0];
+        if (!uid||uid===0) return
+        const res = await node_delete(uid)
+        if (res.data) {
+          mindMap.execCommand('REMOVE_NODE')
+        }
+      }
+
     },
   },
 ])
@@ -242,30 +302,21 @@ const mousedownX = ref(0)
 const mousedownY = ref(0)
 const isMousedown = ref(false)
 
-onMounted(() => {
+onMounted(async () => {
+  const nodeList = await node_list({"project_id": 1, "father_id": 0, "type_id": 1})
+  console.log(nodeList)
+  if (nodeList.data.length < 1) return
+  const data = parseNode(nodeList.data[0])
+  // const res2 = await node_add( {"project_id": 1, "father_id": 0, "type_id": 1, "name": "我是节点名称", "abs": "我是说明"})
+  // const res2 = await node_delete(19)
+
   mindMap = new MindMap({
     el: mindMapContainer.value,
-    data: {
-      "data": {
-        "text": "根节点"
-      },
-      "children": [
-        {
-          "data": {
-            "text": "二级节点"
-          },
-          "children": []
-        },
-        {
-          "data": {
-            "text": "二级节点"
-          },
-          "children": []
-        }
-      ]
-    },
+    data,
     initRootNodePosition: ['left', 'center']
   });
+
+  MindMap.usePlugin(RichText, {})
 
   // 监听节点激活事件
   mindMap.on('node_active', (node, nodeList) => {
@@ -314,10 +365,9 @@ onMounted(() => {
     left.value = e.clientX + 10
     top.value = e.clientY + 10
     show.value = true
-    debugger
   })
 
-  //点击node节点
+  //节点的右键菜单事件
   mindMap.on('node_contextmenu', (e, node) => {
     type.value = 'node'
     left.value = e.clientX + 10
@@ -326,10 +376,36 @@ onMounted(() => {
     currentNode.value = node
   })
 
+  //节点文本编辑框关闭事件
+  mindMap.on('hide_text_edit', (e, node) => {
+    debugger
+  })
+  //节点文本编辑框关闭事件
+  // mindMap.on('rich_text_selection_change', (e, node) => {
+  //   debugger
+  // })
+
   mindMap.on('node_click', hide)
   mindMap.on('draw_click', hide)
   mindMap.on('expand_btn_click', hide)
 })
+
+
+//Drawer抽屉
+const drawerVisible = ref(false)
+
+const parseNode = (node) => {
+  const data = {}
+  const {id, name, children} = node
+  Reflect.set(data, "data", {text: name, uid: id})
+  Reflect.set(data, "children", [])
+  if (children) {
+    for (const item of children) {
+      data.children.unshift(parseNode(item))
+    }
+  }
+  return data
+}
 
 </script>
 
@@ -350,37 +426,54 @@ onMounted(() => {
         v-model:show="show"
         :options="optionsComponent"
     >
-      <context-menu-item label="AI 用例衍生"/>
+      <!--      <context-menu-item label="AI 用例衍生"/>-->
+      <!--      <context-menu-separator/>-->
       <!--      <context-menu-item label="AI 生成"/>-->
-      <!--            <context-menu-item label="新增子节点"/>-->
-      <!--      <template #default>-->
-      <!--        <span style="display: inline-flex; align-items: center;">-->
-      <!--          <i class="your-icon-class"> <Edit style="width: 1em; height: 1em; margin-right: 8px"/></i> &lt;!&ndash; 替换为你的图标 &ndash;&gt;-->
-      <!--          <span style="margin-left: 8px;">AI 用例衍生</span>-->
-      <!--        </span>-->
-      <!--      </template>-->
-      <!--      <context-menu-item label="新增邻节点"/>-->
-      <!--      <context-menu-group label="收起">-->
-      <!---->
-      <!--      </context-menu-group>-->
-      <!--      <context-menu-group label="插入">-->
-      <!---->
-      <!--      </context-menu-group>-->
-      <!--      <context-menu-group label="标记节点类型">-->
-      <!---->
-      <!--      </context-menu-group>-->
-      <!--      <template v-for="item in menuData">-->
-      <!--        <context-menu-item v-if="!item?.children" :label="item.label" @click="item.handler"></context-menu-item>-->
-      <!--        <context-menu-group v-else :label="item.label">-->
-      <!--          <template v-for="i in item.children">-->
-      <!--            <context-menu-item :label="i.label" @click="i.handler"></context-menu-item>-->
-      <!--          </template>-->
-      <!--        </context-menu-group>-->
-      <!--      </template>-->
+
+      <template v-for="item in menuData">
+        <context-menu-item v-if="item?.type===1" :label="item.label" @click="item.handler"></context-menu-item>
+        <context-menu-group v-if="item?.type===2" :label="item.label">
+          <template v-for="i in item.children">
+            <context-menu-item v-if="i?.type===1" :label="i.label" @click="i.handler"></context-menu-item>
+            <context-menu-separator v-if="i?.type===3"/>
+          </template>
+        </context-menu-group>
+        <context-menu-separator v-if="item?.type===3"/>
+      </template>
     </context-menu>
+    <el-drawer v-model="drawerVisible" :show-close="false">
+      <template #header="{ close, titleId }" class="p-0">
+        <div class="flex items-baseline gap-2">
+          <div class="border-1 px-1 border-green-400 text-green-400" style="font-size: 12px">模块</div>
+          <b><span>好友组队功能</span></b>
+          <div class="px-1 text-green-400" style="font-size: 12px">
+            <el-icon>
+              <Discount/>
+            </el-icon>
+            自建模型
+          </div>
+        </div>
+        <el-icon class="cursor-pointer" @click="drawerVisible=false">
+          <Close/>
+        </el-icon>
+      </template>
+      <Drawer :drawerVisible="drawerVisible"/>
+    </el-drawer>
   </div>
 </template>
 
 <style scoped>
+:deep(.el-drawer) {
+  .el-drawer__header {
+    background: #ffffff;
+    border-bottom: 1px solid #c8c8c8;
+    min-height: 48px;
+    padding: 8px;
+    margin: 0;
+  }
 
+  .el-drawer__body {
+    padding: 0;
+  }
+}
 </style>
