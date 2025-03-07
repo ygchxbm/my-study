@@ -9,7 +9,7 @@ const redirectUrl = import.meta.env.MODE == 'development' ? VITE_APP_BASE_HOST :
 const route = useRoute();
 const router = useRouter();
 
-const {getUser, setUser, removeUser} = useUserStore()
+const {setUser, setToken} = useUserStore()
 
 
 const onSubmit = async (code: any) => {
@@ -29,8 +29,10 @@ const onSubmit = async (code: any) => {
   //   },
   //   message: ''
   // }
-  if (res?.data.userInfo) {
-    setUser(res.data.userInfo)
+  debugger
+  if (res?.data.userinfo && res.data.access_token) {
+    setUser(res.data.userinfo)
+    setToken(res.data.access_token)
     await router.push('/')
   }
 };

@@ -1,5 +1,6 @@
 import axios from "axios";
 import {ElLoading, ElNotification} from 'element-plus'
+import {useUserStore} from "@/store/useUserStore"
 
 const request = axios.create({
     baseURL: "/api/v1",
@@ -13,6 +14,11 @@ const errorHandler = (error) => {
 }
 
 request.interceptors.request.use(config => {
+    const {getToken} = useUserStore()
+    const token = getToken()
+    if (token) {
+        config.headers['Authorization'] = 'Bearer ' + token
+    }
     return config
 },errorHandler)
 
