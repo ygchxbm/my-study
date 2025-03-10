@@ -8,9 +8,7 @@ const {VITE_APP_OASIS_HOST, VITE_APP_OASIS_CLIENT_ID, VITE_APP_BASE_HOST} = impo
 const redirectUrl = import.meta.env.MODE == 'development' ? VITE_APP_BASE_HOST : `${window.origin}/Login`
 const route = useRoute();
 const router = useRouter();
-
 const {setUser, setToken} = useUserStore()
-
 
 const onSubmit = async (code: any) => {
   if (!code) return;
@@ -29,7 +27,6 @@ const onSubmit = async (code: any) => {
   //   },
   //   message: ''
   // }
-  debugger
   if (res?.data.userinfo && res.data.access_token) {
     setUser(res.data.userinfo)
     setToken(res.data.access_token)
