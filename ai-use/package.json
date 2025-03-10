@@ -14,6 +14,7 @@
     "@tailwindcss/vite": "^4.0.10",
     "axios": "^1.8.1",
     "element-plus": "^2.9.5",
+    "lodash": "^4.17.21",
     "pinia": "^3.0.1",
     "simple-mind-map": "0.13.1-fix.2",
     "tailwindcss": "^4.0.10",
