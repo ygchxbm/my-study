@@ -1,5 +1,5 @@
 import request from "@/utils/request";
-import axios from "axios";
+import {Node_modify_options} from "@/api/interfance"
 
 export const login = (data) => {
     return request({
@@ -33,3 +33,11 @@ export const node_delete = (node_id) => {
         data: {node_id}
     })
 }
+
+export const node_modify = ((data:Node_modify_options) => {
+    return request({
+        url: `node/modify`,
+        method: 'post',
+        data
+    })
+})
