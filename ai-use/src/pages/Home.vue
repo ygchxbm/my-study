@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import {ref, onMounted, computed, shallowRef} from 'vue'
 import MindMap from "simple-mind-map"
+import {createUid} from 'simple-mind-map/src/utils'
 import {ContextMenu, ContextMenuGroup, ContextMenuSeparator, ContextMenuItem} from '@imengyu/vue3-context-menu'
-import { ElDrawer} from 'element-plus'
+import {ElDrawer} from 'element-plus'
 import {Close, Discount} from '@element-plus/icons-vue'
 import Drawer from "@/components/Drawer.vue"
-import {node_add, node_list, node_delete} from "@/api"
+import {node_add, node_list, node_delete, node_modify} from "@/api"
 import RichText from 'simple-mind-map/src/plugins/RichText.js'
+import _ from "lodash"
 
 const mindMapContainer = ref()
 let mindMap = null
@@ -142,36 +144,46 @@ const menuData = ref([
     label: '新增子节点',
     type: 1,//item
     handler: async () => {
-      if (activeNodes.value.length > 0) {
-        const {uid} = activeNodes.value[0];
-        const res = await node_add({"project_id": 1, "father_id": uid, "type_id": 1, "name": "新节点", "abs": "我是说明"})
-        if (res.data) {
-          const {id, name} = res.data
-          mindMap.execCommand('INSERT_CHILD_NODE', false, [], {
-            uid: id,
-            text: name
-          })
-        }
-      }
+      if (activeNodes.value.length === 0) return
+      const father_id = getId(activeNodes.value[0]?.uid);
+      if (!father_id) return
+      const name = "新节点";
+      const abs = "新备注";
+      const res = await node_add({"project_id": 1, father_id, "type_id": 1, name, abs});
+      if (!res.data) return
+      const {id} = res.data
+      const uid = createUid();
+      Reflect.set(UIdMap, uid, id);
+      console.log(uid)
+      mindMap.execCommand('INSERT_CHILD_NODE', false, [], {
+        uid,
+        text: name,
+        note: abs
+      })
     },
   },
   {
     label: '新增邻节点',
     type: 1,//item
     handler: async () => {
-      if (activeNodes.value.length > 0) {
-        const {parent} = activeNodes.value[0];
-        if (!parent) return
-        const {uid} = parent;
-        const res = await node_add({"project_id": 1, "father_id": uid, "type_id": 1, "name": "新节点", "abs": "我是说明"})
-        if (res.data) {
-          const {id, name} = res.data
-          mindMap.execCommand('INSERT_NODE', false, [], {
-            uid: id,
-            text: name
-          })
-        }
-      }
+      if (activeNodes.value.length === 0) return
+
+      const {parent} = activeNodes.value[0]
+      if (!parent) return
+      const father_id = getId(parent?.uid);
+      if (!father_id) return
+      const name = "新节点";
+      const abs = "新备注";
+      const res = await node_add({"project_id": 1, father_id, "type_id": 1, name, abs});
+      if (!res.data) return
+      const {id} = res.data
+      const uid = createUid();
+      Reflect.set(UIdMap, uid, id);
+      mindMap.execCommand('INSERT_NODE', false, [], {
+        uid,
+        text: name,
+        note: abs
+      })
     },
   },
   {
@@ -257,8 +269,9 @@ const menuData = ref([
     handler: async () => {
       if (activeNodes.value.length > 0) {
         const {uid} = activeNodes.value[0];
-        if (!uid||uid===0) return
-        const res = await node_delete(uid)
+        const id = getId(uid);
+        if (!id || id === 0) return
+        const res = await node_delete(id)
         if (res.data) {
           mindMap.execCommand('REMOVE_NODE')
         }
@@ -302,18 +315,26 @@ const mousedownX = ref(0)
 const mousedownY = ref(0)
 const isMousedown = ref(false)
 
+
+const UIdMap = {}
+const getId = (uid) => {
+  if (uid) {
+    return UIdMap[uid]
+  }
+}
+
 onMounted(async () => {
   const nodeList = await node_list({"project_id": 1, "father_id": 0, "type_id": 1})
+  // await node_delete(4)
   console.log(nodeList)
   if (nodeList.data.length < 1) return
   const data = parseNode(nodeList.data[0])
-  // const res2 = await node_add( {"project_id": 1, "father_id": 0, "type_id": 1, "name": "我是节点名称", "abs": "我是说明"})
-  // const res2 = await node_delete(19)
 
   mindMap = new MindMap({
     el: mindMapContainer.value,
     data,
-    initRootNodePosition: ['left', 'center']
+    initRootNodePosition: ['left', 'center'],
+    richText: true
   });
 
   MindMap.usePlugin(RichText, {})
@@ -321,6 +342,7 @@ onMounted(async () => {
   // 监听节点激活事件
   mindMap.on('node_active', (node, nodeList) => {
     activeNodes.value = nodeList
+    console.log('activeNodes:', nodeList)
   })
 
   // 前进回退事件
@@ -377,17 +399,37 @@ onMounted(async () => {
   })
 
   //节点文本编辑框关闭事件
-  mindMap.on('hide_text_edit', (e, node) => {
-    debugger
-  })
+  // mindMap.on('hide_text_edit', (e, node) => {
+  //   debugger
+  // })
+
   //节点文本编辑框关闭事件
   // mindMap.on('rich_text_selection_change', (e, node) => {
+  //   //暂不行
   //   debugger
   // })
 
   mindMap.on('node_click', hide)
   mindMap.on('draw_click', hide)
   mindMap.on('expand_btn_click', hide)
+
+  // 监听节点内容变化
+  mindMap.on('data_change_detail', (arr) => {
+    arr.forEach(async item => {
+      if (item?.oldData?.data && !_.isEqual(item.data.data, item.oldData.data)) {
+        //文本变化
+        const {text, note, uid} = item.data.data;
+        const node_id = getId(uid);
+        console.log({text, note, node_id})
+        if (!node_id) return
+        await node_modify({node_id, name: text, abs: note});
+      }
+    });
+  });
+
+  // mindMap.on('hide_text_edit', (textEditNode,activeNodeList,node) => {
+  //   debugger
+  // })
 })
 
 
@@ -396,8 +438,10 @@ const drawerVisible = ref(false)
 
 const parseNode = (node) => {
   const data = {}
-  const {id, name, children} = node
-  Reflect.set(data, "data", {text: name, uid: id})
+  const {id, name, abs, children} = node
+  const uid = createUid();
+  Reflect.set(UIdMap, uid, id);
+  Reflect.set(data, "data", {text: name, uid, note: abs})
   Reflect.set(data, "children", [])
   if (children) {
     for (const item of children) {
