@@ -1,10 +1,10 @@
 import axios from "axios";
-import {ElLoading, ElNotification} from 'element-plus'
+import {ElNotification} from 'element-plus'
 import {useUserStore} from "@/store/useUserStore"
 
 const request = axios.create({
     baseURL: "/api/v1",
-    timeout: 5000,
+    timeout: 60000,
 })
 
 const CODE_WHILE_LIST=[];
@@ -35,5 +35,4 @@ request.interceptors.response.use((response)=>{
     }
     return response.data
 },errorHandler)
-console.log(request);
 export default request
