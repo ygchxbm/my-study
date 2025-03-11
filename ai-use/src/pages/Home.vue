@@ -6,7 +6,7 @@ import {ContextMenu, ContextMenuGroup, ContextMenuSeparator, ContextMenuItem} fr
 import {ElDrawer} from 'element-plus'
 import {Close, Discount} from '@element-plus/icons-vue'
 import Drawer from "@/components/Drawer.vue"
-import {node_add, node_list, node_delete, node_modify} from "@/api"
+import {node_add, node_list, node_delete, node_modify, node_adds} from "@/api"
 import RichText from 'simple-mind-map/src/plugins/RichText.js'
 import _ from "lodash"
 
@@ -15,6 +15,21 @@ let mindMap = null
 
 // 当前激活的节点列表
 const activeNodes = shallowRef([])
+const activeNodeId = computed(() => {
+  if (activeNodes.value?.length > 0) {
+    return getId(activeNodes.value[0].uid)
+  } else {
+    return undefined
+  }
+})
+
+const activeNodeText = computed(() => {
+  if (activeNodes.value?.length > 0) {
+    return activeNodes.value[0].nodeData.data.text
+  } else {
+    return ''
+  }
+})
 
 // 记录前进回退
 const isStart = ref(true)
@@ -122,6 +137,8 @@ const buttons = ref([
   },
 ])
 
+const drawerType = ref(1)
+
 const menuData = ref([
   {
     label: 'AI用例衍生',
@@ -135,6 +152,7 @@ const menuData = ref([
     type: 1,//item
     handler: () => {
       drawerVisible.value = true
+      drawerType.value = 2
     },
   },
   {
@@ -276,7 +294,6 @@ const menuData = ref([
           mindMap.execCommand('REMOVE_NODE')
         }
       }
-
     },
   },
 ])
@@ -291,14 +308,6 @@ const left = ref(0)
 const top = ref(0)
 // 是否显示菜单
 const show = ref(false)
-
-const onMenuClick = (e) => {
-  console.log(e)
-}
-
-const onLoopMenuClick = (e) => {
-  console.log(e)
-}
 
 const optionsComponent = computed(() => {
   return {
@@ -326,7 +335,6 @@ const getId = (uid) => {
 onMounted(async () => {
   const nodeList = await node_list({"project_id": 1, "father_id": 0, "type_id": 1})
   // await node_delete(4)
-  console.log(nodeList)
   if (nodeList.data.length < 1) return
   const data = parseNode(nodeList.data[0])
 
@@ -342,7 +350,6 @@ onMounted(async () => {
   // 监听节点激活事件
   mindMap.on('node_active', (node, nodeList) => {
     activeNodes.value = nodeList
-    console.log('activeNodes:', nodeList)
   })
 
   // 前进回退事件
@@ -398,17 +405,6 @@ onMounted(async () => {
     currentNode.value = node
   })
 
-  //节点文本编辑框关闭事件
-  // mindMap.on('hide_text_edit', (e, node) => {
-  //   debugger
-  // })
-
-  //节点文本编辑框关闭事件
-  // mindMap.on('rich_text_selection_change', (e, node) => {
-  //   //暂不行
-  //   debugger
-  // })
-
   mindMap.on('node_click', hide)
   mindMap.on('draw_click', hide)
   mindMap.on('expand_btn_click', hide)
@@ -426,15 +422,46 @@ onMounted(async () => {
       }
     });
   });
-
-  // mindMap.on('hide_text_edit', (textEditNode,activeNodeList,node) => {
-  //   debugger
-  // })
 })
 
 
 //Drawer抽屉
 const drawerVisible = ref(false)
+
+const addNodes = async (type_id: number, texts: string[]) => {
+  console.log(type_id)
+  console.log(texts)
+  const obj = []
+  const father_id = activeNodes.value?.length > 0 ? getId(activeNodes.value[0].uid) : ''
+  texts.forEach(text => {
+    obj.push({
+      project_id: 1,
+      father_id,
+      type_id: type_id,
+      name: text,
+      abs: '',
+    })
+  })
+
+  const res = await node_adds(obj)
+  if (res?.data?.length === 0) return
+  const {data} = res;
+  const childList = []
+  data.forEach(({id, name, abs}) => {
+    const uid = createUid();
+    Reflect.set(UIdMap, uid, id);
+    childList.push({
+      data: {
+        uid,
+        text: name,
+        note: abs
+      }
+    })
+  })
+
+  mindMap.execCommand('INSERT_MULTI_CHILD_NODE', [], childList)
+  drawerVisible.value = false;
+}
 
 const parseNode = (node) => {
   const data = {}
@@ -468,12 +495,7 @@ const parseNode = (node) => {
     <div ref="mindMapContainer" class="w-full h-full"></div>
     <context-menu
         v-model:show="show"
-        :options="optionsComponent"
-    >
-      <!--      <context-menu-item label="AI 用例衍生"/>-->
-      <!--      <context-menu-separator/>-->
-      <!--      <context-menu-item label="AI 生成"/>-->
-
+        :options="optionsComponent">
       <template v-for="item in menuData">
         <context-menu-item v-if="item?.type===1" :label="item.label" @click="item.handler"></context-menu-item>
         <context-menu-group v-if="item?.type===2" :label="item.label">
@@ -489,7 +511,7 @@ const parseNode = (node) => {
       <template #header="{ close, titleId }" class="p-0">
         <div class="flex items-baseline gap-2">
           <div class="border-1 px-1 border-green-400 text-green-400" style="font-size: 12px">模块</div>
-          <b><span>好友组队功能</span></b>
+          <b><span>{{ activeNodes?.length > 0 ? activeNodes[0].nodeData.data.text : '' }}</span></b>
           <div class="px-1 text-green-400" style="font-size: 12px">
             <el-icon>
               <Discount/>
@@ -501,7 +523,13 @@ const parseNode = (node) => {
           <Close/>
         </el-icon>
       </template>
-      <Drawer :drawerVisible="drawerVisible"/>
+      <Drawer
+          @addNodes="addNodes"
+          :drawerType="drawerType"
+          :drawerVisible="drawerVisible"
+          :node_id=activeNodeId
+          :node_text=activeNodeText
+      />
     </el-drawer>
   </div>
 </template>
