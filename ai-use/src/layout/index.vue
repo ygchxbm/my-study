@@ -26,18 +26,25 @@ import Aside from "@/layout/Aside.vue";
   width: 100%;
   height: 100%;
 
-  .el-container {
-    width: 100%;
-    height: 100%;
-  }
-
   .el-header {
     padding: 0;
   }
 
-  .el-main {
-    padding: 0;
+  .el-container {
+    width: 100%;
+    height: 100%;
+
+    .el-aside {
+      background: #ececec;
+    }
+
+    .el-main {
+      padding: 0;
+      background: #f7f7f7;
+    }
+
   }
+
 }
 
 </style>
