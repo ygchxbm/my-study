@@ -1,7 +1,8 @@
 import request from "@/utils/request";
-import {Node_add_options, Ai_options, Node_modify_options} from "@/api/interfance"
+import {Node_add_options, Ai_options, Node_modify_options, Node_list_res, Login_options, Node_list_options, Node_add_res, Node_adds_options} from "@/api/interfance"
+import {AxiosResponse} from "axios";
 
-export const login = (data) => {
+export const login = (data: Login_options) => {
     return request({
         url: 'user/login',
         method: 'post',
@@ -9,7 +10,7 @@ export const login = (data) => {
     })
 }
 
-export const node_list = (data) => {
+export const node_list = (data: Node_list_options): Promise<Node_list_res> => {
     const {project_id, father_id, type_id} = data
     return request({
         url: `node/list?project_id=${project_id}&father_id=${father_id}&type_id=${type_id}`,
@@ -17,7 +18,8 @@ export const node_list = (data) => {
     })
 }
 
-export const node_add = (data: Node_add_options) => {
+
+export const node_add = (data: Node_add_options):Promise<Node_add_res> => {
     return request({
         url: `node/add`,
         method: 'post',
@@ -26,7 +28,7 @@ export const node_add = (data: Node_add_options) => {
 }
 
 
-export const node_delete = (node_id) => {
+export const node_delete = (node_id:number) => {
     return request({
         url: `node/delete`,
         method: 'post',
@@ -46,17 +48,18 @@ export const ai = ((data: Ai_options) => {
     const {type_id, node_id} = data
     if (!type_id || !node_id) return
     return request({
-        url: `ai?type_id=${type_id}&node_id=${node_id}`,
-        method: 'get',
+        url: `ai`,
+        method: 'post',
+        data
     })
 })
 
-export const node_adds = (data: Node_add_options[]) => {
+export const node_adds = (data: Node_adds_options[]) => {
     return request({
         url: `node/adds`,
         method: 'post',
         data: {
-            node_list:data
+            node_list: data
         }
     })
 }
